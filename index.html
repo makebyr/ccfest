@@ -3,550 +3,460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Makebyr IDE - ccfest 2.0</title>
+    <title>Makebyr IDE - ccfest Ultimate Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Orbitron:wght@500;700&display=swap');
-        
         :root {
-            --bg-color: #050505;
-            --panel-bg: #0d1117;
-            --neon-green: #00ff41;
-            --neon-blue: #00f0ff;
-            --neon-pink: #ff003c;
-            --neon-purple: #b026ff;
-            --neon-orange: #ff8c00;
-            --text-main: #e6e6e6;
+            --bg-dark: #050505;
+            --bg-panel: #111111;
+            --border-color: #222222;
+            --accent-blue: #0ea5e9;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --text-main: #f3f4f6;
+            --text-muted: #6b7280;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-dark);
             color: var(--text-main);
             font-family: 'Fira Code', monospace;
             overflow: hidden;
             margin: 0;
             padding: 0;
-        }
-
-        #loading-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, #111, #000);
-            z-index: 9999;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            height: 100vh;
         }
 
-        .falling-letters {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 5rem;
-            font-weight: 700;
-            color: var(--neon-blue);
-            text-shadow: 0 0 20px var(--neon-blue), 0 0 40px var(--neon-blue);
-            display: flex;
-            gap: 5px;
+        /* Anti-DevTools overlay (hidden by default) */
+        #security-overlay {
+            display: none;
+            position: fixed; inset: 0; background: black; color: red;
+            z-index: 99999; justify-content: center; align-items: center;
+            font-size: 2rem; font-family: 'Orbitron', sans-serif; text-align: center;
         }
 
-        .letter {
-            display: inline-block;
-            transform: translateY(-100vh);
-            opacity: 0;
-            animation: fall 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        /* Loading Screen Animation - Matrix Style */
+        #loading-screen {
+            position: fixed; inset: 0; background-color: #000;
+            z-index: 5000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 0.5s ease-out, visibility 0.5s;
+            overflow: hidden;
         }
 
-        @keyframes fall {
-            0% { transform: translateY(-100vh); opacity: 0; }
-            50% { opacity: 1; }
-            70% { transform: translateY(20px); }
-            100% { transform: translateY(0); opacity: 1; }
+        .matrix-container {
+            display: flex; gap: 15px; font-family: 'Orbitron', sans-serif;
+            font-size: 5rem; font-weight: 900; color: #0ea5e9;
+            text-shadow: 0 0 15px rgba(14, 165, 233, 0.8), 0 0 30px rgba(14, 165, 233, 0.4);
         }
 
-        .subtitle {
-            margin-top: 20px;
-            font-size: 1.2rem;
-            color: #888;
-            opacity: 0;
-            animation: fadeIn 1s ease 2s forwards;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+        .matrix-letter {
+            transform: translateY(-100vh); opacity: 0;
+            animation: matrixDrop 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
 
-        @keyframes fadeIn {
-            to { opacity: 1; }
+        @keyframes matrixDrop {
+            0% { transform: translateY(-100vh); opacity: 0; color: white; }
+            50% { opacity: 1; color: white; text-shadow: 0 0 20px white; }
+            100% { transform: translateY(0); opacity: 1; color: #0ea5e9; }
         }
 
-        .neon-border {
-            border: 1px solid #333;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.1);
-            transition: all 0.3s ease;
+        .brand-subtitle {
+            margin-top: 2rem; font-family: sans-serif; letter-spacing: 0.5em;
+            color: #444; font-size: 1.2rem; opacity: 0; text-transform: uppercase;
+            animation: fadeInMatrix 1s ease 1.5s forwards;
         }
+        @keyframes fadeInMatrix { to { opacity: 1; color: #888; } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+        .btn {
+            background: #1a1a1a; color: white; border: 1px solid #333;
+            padding: 6px 14px; border-radius: 4px; font-size: 0.8rem;
+            cursor: pointer; transition: all 0.2s; font-family: sans-serif;
+            display: flex; align-items: center; gap: 6px; font-weight: bold;
+        }
+        .btn:hover { background: #2a2a2a; border-color: #555; }
+        .btn-primary { background: var(--accent-blue); border-color: var(--accent-blue); color: black; }
+        .btn-primary:hover { background: #0284c7; border-color: #0284c7; color: white; }
+        .btn-success { background: var(--accent-green); border-color: var(--accent-green); color: black; }
+        .btn-success:hover { background: #059669; color: white; }
+        .btn-purple { background: var(--accent-purple); border-color: var(--accent-purple); color: white; }
+
+        .editor-wrapper { position: relative; flex-grow: 1; display: flex; overflow: hidden; background: #0a0a0a;}
         
-        .neon-border:focus-within {
-            border-color: var(--neon-green);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
-        }
-
-        .btn-cyber {
-            background: transparent;
-            border: 1px solid var(--neon-blue);
-            color: var(--neon-blue);
-            padding: 0.5rem 1rem;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-cyber:hover {
-            background: var(--neon-blue);
-            color: #000;
-            box-shadow: 0 0 15px var(--neon-blue);
-        }
-
-        .btn-cyber-primary { border-color: var(--neon-green); color: var(--neon-green); }
-        .btn-cyber-primary:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 15px var(--neon-green); }
-
-        .btn-cyber-danger { border-color: var(--neon-pink); color: var(--neon-pink); }
-        .btn-cyber-danger:hover { background: var(--neon-pink); color: #fff; box-shadow: 0 0 15px var(--neon-pink); }
-
-        .editor-container {
-            position: relative;
-            flex-grow: 1;
-            overflow: hidden;
-            background: #0a0a0c;
-            display: flex;
-        }
-
         .line-numbers {
-            padding: 10px 5px 10px 10px;
-            text-align: right;
-            color: #555;
-            background: #111;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            user-select: none;
-            min-width: 45px;
-            overflow-y: hidden;
+            padding: 16px 10px; text-align: right; color: #444;
+            background: #050505; border-right: 1px solid var(--border-color);
+            font-size: 14px; line-height: 1.6; user-select: none; min-width: 50px; overflow: hidden;
         }
 
-        .code-area { position: relative; flex-grow: 1; height: 100%; }
+        .code-input-area { position: relative; flex-grow: 1; height: 100%; }
 
         #code-editor, #code-highlight {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            padding: 10px;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            tab-size: 4;
-            overflow: auto;
-            border: none;
-            outline: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 16px; font-family: 'Fira Code', monospace; font-size: 14px;
+            line-height: 1.6; white-space: pre; tab-size: 4;
+            border: none; outline: none; overflow: auto;
         }
 
-        #code-editor {
-            color: transparent; 
-            background: transparent;
-            caret-color: var(--neon-green); 
-            z-index: 2;
-            resize: none;
+        #code-editor { color: transparent; background: transparent; caret-color: #0ea5e9; z-index: 2; resize: none; }
+        #code-highlight { z-index: 1; color: #a1a1aa; pointer-events: none; }
+
+        /* Highlight Colors */
+        .hl-tag { color: #ec4899; font-weight: bold; } /* Pink */
+        .hl-prop { color: #8b5cf6; } /* Purple */
+        .hl-val { color: #fde047; } /* Yellow */
+        .hl-struct { color: #0ea5e9; font-weight: bold; text-shadow: 0 0 5px rgba(14,165,233,0.5); }
+        .hl-comment { color: #22c55e; font-style: italic; } /* Green */
+        .hl-slash { color: #555; }
+
+        .tab-btn {
+            flex: 1; text-align: center; padding: 10px; cursor: pointer;
+            border-bottom: 2px solid transparent; color: var(--text-muted);
+            transition: 0.3s; font-family: sans-serif; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;
         }
+        .tab-btn.active { border-bottom-color: var(--accent-blue); color: var(--accent-blue); background: rgba(14, 165, 233, 0.05); }
 
-        #code-highlight {
-            z-index: 1;
-            color: #ccc;
-            pointer-events: none;
-        }
-
-        /* Colores de Sintaxis de ccfest */
-        .hl-tag { color: var(--neon-pink); font-weight: bold; }
-        .hl-slash { color: #888; }
-        .hl-content { color: #e3d544; }
-        .hl-struct { color: var(--neon-purple); text-shadow: 0 0 5px var(--neon-purple); font-weight: bold; } /* <e cc>, <c>, <c>;, <f>; */
-        .hl-container { color: var(--neon-orange); font-weight: bold; } /* <v>, <v>; */
-
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
-
-        #iframe-container { background: #fff; }
-        
-        .sidebar-tab-active { border-bottom: 2px solid var(--neon-blue); color: var(--neon-blue); }
-        .sidebar-tab { cursor: pointer; padding: 10px; transition: 0.3s; }
-        .sidebar-tab:hover { background: #1a1a1a; }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col">
+<body>
 
-    <div id="loading-screen">
-        <div class="falling-letters" id="makebyr-logo"></div>
-        <div class="subtitle">hecho por la marca makebyr</div>
+    <div id="security-overlay">
+        <div>
+            <h2>ACCESO DENEGADO</h2>
+            <p>Herramientas de desarrollador bloqueadas por seguridad.</p>
+        </div>
     </div>
 
-    <header class="h-14 bg-[#0a0a0c] border-b border-[#222] flex items-center px-4 justify-between shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.5)] z-10">
-        <div class="flex items-center gap-3">
-            <span class="font-['Orbitron'] font-bold text-xl tracking-wider text-[var(--neon-green)] drop-shadow-[0_0_5px_var(--neon-green)]">MAKEBYR IDE</span>
-            <span class="text-xs text-gray-500 mt-1">.ccfest v2.0</span>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="matrix-container" id="logo-container"></div>
+        <div class="brand-subtitle">Makebyr Engine - Compilando Entorno</div>
+    </div>
+
+    <header class="h-14 bg-[var(--bg-panel)] border-b border-[var(--border-color)] flex items-center justify-between px-4 shrink-0 shadow-lg relative z-10">
+        <div class="flex items-center gap-4">
+            <span class="font-['Orbitron'] font-black text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-widest">MAKEBYR</span>
+            <span class="text-[10px] text-cyan-400 border border-cyan-800 bg-cyan-900/30 px-2 py-1 rounded font-bold">ccfest ULTIMATE v4</span>
         </div>
-        <div class="flex gap-2">
-            <button onclick="compileProject()" class="btn-cyber">Compilar</button>
-            <button onclick="document.getElementById('file-upload').click()" class="btn-cyber">Upload</button>
+        <div class="flex items-center gap-2">
+            <span id="save-status" class="text-xs text-green-500 mr-4 font-bold animate-pulse"></span>
+            
+            <button onclick="document.getElementById('file-upload').click()" class="btn">
+                📤 Subir .ccfest
+            </button>
             <input type="file" id="file-upload" accept=".ccfest" class="hidden" onchange="uploadProject(event)">
             
-            <div class="w-px h-6 bg-gray-700 mx-2 self-center"></div>
-            
-            <button onclick="runProject()" class="btn-cyber btn-cyber-primary flex items-center gap-2">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-                Ejecutar / Probar
+            <button onclick="downloadCCFest()" class="btn">
+                💾 Bajar .ccfest
             </button>
-            <button id="btn-convert" onclick="convertToHTML()" class="btn-cyber hidden" style="border-color: var(--neon-pink); color: var(--neon-pink);">Convertir a HTML</button>
+
+            <div class="w-px h-6 bg-gray-800 mx-2"></div>
+            
+            <button onclick="runCode()" class="btn btn-success">
+                ▶ COMPILAR Y EJECUTAR
+            </button>
+            
+            <button id="btn-export-html" onclick="downloadHTML()" class="btn btn-primary hidden">
+                ⚡ Exportar HTML Final
+            </button>
         </div>
     </header>
 
     <main class="flex-grow flex overflow-hidden">
         
-        <aside class="w-64 bg-[#08080a] border-r border-[#222] flex flex-col shrink-0">
-            <div class="flex border-b border-[#222] text-sm">
-                <div id="tab-projects" class="w-1/2 text-center sidebar-tab sidebar-tab-active" onclick="switchSidebarTab('projects')">Proyectos</div>
-                <div id="tab-docs" class="w-1/2 text-center sidebar-tab text-gray-500" onclick="switchSidebarTab('docs')">Reglas</div>
+        <!-- Sidebar -->
+        <aside class="w-72 bg-[var(--bg-panel)] border-r border-[var(--border-color)] flex flex-col shrink-0 z-10">
+            <div class="flex border-b border-[var(--border-color)] bg-black">
+                <div id="tab-proj" class="tab-btn active" onclick="switchTab('proj')">📁 Proyectos</div>
+                <div id="tab-doc" class="tab-btn" onclick="switchTab('doc')">📚 Reglas (1000+)</div>
             </div>
             
             <!-- Proyectos -->
-            <div id="panel-projects" class="flex-grow overflow-y-auto p-2 flex flex-col gap-2">
-                <button onclick="createNewProject()" class="btn-cyber w-full mb-2 text-xs">+ Nuevo Proyecto</button>
-                <div id="project-list" class="flex flex-col gap-1">
-                    <!-- Lista generada por JS -->
-                </div>
+            <div id="panel-proj" class="flex-grow p-3 flex flex-col gap-2 overflow-y-auto">
+                <button onclick="createProject()" class="btn btn-purple w-full justify-center text-sm mb-2">+ Nuevo Proyecto</button>
+                <div id="projects-list" class="flex flex-col gap-2"></div>
             </div>
 
-            <!-- Documentación 50 Reglas -->
-            <div id="panel-docs" class="flex-grow overflow-y-auto p-4 hidden text-xs text-gray-300">
-                <h3 class="text-[var(--neon-blue)] font-bold mb-2">50 Reglas de ccfest</h3>
-                <ul class="list-decimal pl-4 space-y-1" id="rules-list">
-                    <!-- Lista inyectada por JS para no llenar HTML -->
+            <!-- Docs -->
+            <div id="panel-doc" class="flex-grow p-4 hidden flex-col overflow-y-auto text-xs text-gray-400 font-sans">
+                <h3 class="font-bold text-cyan-400 mb-2 border-b border-cyan-900 pb-1">ESTRUCTURA OBLIGATORIA</h3>
+                <p class="mb-4">1: <code>&lt;e cc&gt;</code><br>2: <code>&lt;c&gt;</code><br>Penúltima: <code>&lt;c&gt;;</code><br>Última: <code>&lt;f&gt;;</code></p>
+                
+                <h3 class="font-bold text-cyan-400 mb-2 border-b border-cyan-900 pb-1">SINTAXIS INLINE (Las 1000 Reglas)</h3>
+                <p class="mb-2 text-white">Formato: <code>&lt;etiqueta&gt;/contenido/prop1/val1/prop2/val2/</code></p>
+                <ul class="list-disc pl-4 space-y-2 mb-4 text-[11px]">
+                    <li><b>Etiquetas:</b> text, titu, subtitu, boto, foto, link, in, canvas, div, lista</li>
+                    <li><b>Propiedades:</b> color, bg (fondo), p (posicion/align), size (tamaño), w (width), h (height), class (clase css), radius (borde redondo)</li>
+                    <li><b>Colores Mapeados:</b> blanc, negr, azu, red, verd, amar...</li>
                 </ul>
+                <div class="bg-gray-900 p-2 rounded text-green-400 font-mono text-[10px] mb-4">
+                    Ej: &lt;boto&gt;/Comprar/color/blanc/bg/red/p/center/radius/10px/
+                </div>
+
+                <h3 class="font-bold text-cyan-400 mb-2 border-b border-cyan-900 pb-1">CLASES OOP & BLOQUES</h3>
+                <ul class="list-disc pl-4 space-y-1 mb-4 text-[11px]">
+                    <li><code>&lt;v&gt;</code> Abre bloque/clase</li>
+                    <li><code>&lt;v&gt;;</code> Cierra bloque/clase</li>
+                    <li><code>&lt;herencia&gt;/Padre/</code></li>
+                    <li><code>&lt;poli&gt;/Método/</code></li>
+                    <li><code>&lt;encapsular&gt;/private/</code></li>
+                </ul>
+
+                <h3 class="font-bold text-cyan-400 mb-2 border-b border-cyan-900 pb-1">COMENTARIOS</h3>
+                <p>Usa <code>(( texto</code> o <code>#mi texto</code> en cualquier lugar. El compilador lo ignorará.</p>
             </div>
         </aside>
 
-        <section class="flex-grow flex flex-col border-r border-[#222] bg-[var(--panel-bg)] neon-border relative w-1/3">
-            <div class="bg-[#111] text-xs text-gray-400 p-2 border-b border-[#222] flex justify-between items-center">
-                <span id="current-file-name">📄 sin_titulo.ccfest</span>
-                <span id="save-status" class="text-green-500 hidden">✓ Guardado</span>
+        <section class="flex-grow flex flex-col min-w-0 border-r border-[var(--border-color)] relative w-1/2">
+            <div class="h-8 bg-black border-b border-[var(--border-color)] flex items-center px-4 text-xs text-gray-500 justify-between font-sans">
+                <span id="current-filename" class="font-bold text-gray-300"></span>
                 <span id="cursor-pos">Ln 1, Col 1</span>
             </div>
-            
-            <div class="editor-container">
+            <div class="editor-wrapper">
                 <div id="line-numbers" class="line-numbers">1</div>
-                <div class="code-area">
+                <div class="code-input-area">
                     <pre id="code-highlight" aria-hidden="true"></pre>
-                    <textarea id="code-editor" spellcheck="false" oninput="handleCodeInput()" onscroll="syncScroll()" onkeyup="updateCursor()" onclick="updateCursor()"></textarea>
+                    <textarea id="code-editor" spellcheck="false" wrap="off" oninput="handleInput()" onscroll="syncScroll()" onkeyup="updateCursor()" onclick="updateCursor()"></textarea>
                 </div>
             </div>
         </section>
 
-        <section class="flex-grow flex flex-col bg-[#050505] w-1/3">
-            <!-- Preview -->
-            <div class="h-[70%] flex flex-col border-b border-[#222]">
-                <div class="bg-[#111] text-xs text-gray-400 p-2 border-b border-[#222] flex justify-between items-center">
-                    <span>👁️️ Preview (En vivo)</span>
+        <section class="flex-grow flex flex-col w-1/2 bg-[#050505]" id="preview-section">
+            <div class="h-8 bg-black border-b border-[var(--border-color)] flex items-center px-4 text-xs text-gray-500 shrink-0 font-sans justify-between">
+                <span class="font-bold">👁 Live Preview Engine</span>
+                <span class="text-green-500 text-[10px]" id="render-time"></span>
+            </div>
+            
+            <div class="flex-grow relative bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiMzMzMiLz48L3N2Zz4=')] bg-repeat" id="canvas-container">
+                <div id="preview-empty" class="absolute inset-0 flex items-center justify-center text-gray-600 font-sans text-sm select-none flex-col gap-2">
+                    <svg class="w-12 h-12 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Presiona "Compilar y Ejecutar" para renderizar
                 </div>
-                <div id="iframe-container" class="flex-grow w-full h-full relative overflow-hidden">
-                    <div id="preview-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-600 font-['Orbitron'] opacity-50 select-none text-center p-4">
-                        EJECUTA EL CÓDIGO PARA VER LA VISTA PREVIA
-                    </div>
-                    <iframe id="preview-frame" class="w-full h-full border-none hidden" sandbox="allow-scripts allow-same-origin"></iframe>
-                </div>
+                <!-- Frame de visualización -->
+                <iframe id="preview-frame" class="w-full h-full border-none hidden bg-white" sandbox="allow-scripts allow-same-origin"></iframe>
             </div>
 
-            <!-- Consola -->
-            <div class="h-[30%] flex flex-col bg-[#0d1117]">
-                <div class="bg-[#111] text-xs text-gray-400 p-2 border-b border-[#222]">
-                    > Terminal / Consola
+            <div class="h-40 bg-[#000] border-t border-[var(--border-color)] flex flex-col shrink-0 relative">
+                <div class="h-6 bg-[#111] text-[10px] text-gray-500 flex items-center px-3 uppercase font-bold tracking-wider justify-between border-b border-[#222]">
+                    <span>Terminal ccfest</span>
+                    <button onclick="clearConsole()" class="hover:text-white">Limpiar</button>
                 </div>
-                <div id="console-output" class="flex-grow p-3 font-['Fira_Code'] text-sm overflow-auto whitespace-pre-wrap">
-                    <span class="text-gray-500">Terminal de ccfest inicializada...</span>
-                </div>
+                <div id="console-output" class="flex-grow p-2 overflow-auto text-xs font-['Fira_Code']"></div>
             </div>
         </section>
     </main>
 
     <script>
-        // === GENERAR LAS 50 REGLAS EN EL PANEL ===
-        const fiftyRules = [
-            "Línea 1 OBLIGATORIA: <e cc>",
-            "Línea 2 OBLIGATORIA: <c> (Inicio del código principal)",
-            "Penúltima Línea OBLIGATORIA: <c>; (Cierre del código principal)",
-            "Última Línea OBLIGATORIA: <f>; (Terminal/Fin de archivo)",
-            "Abrir contenedor/clase: <v>",
-            "Cerrar contenedor/clase: <v>;",
-            "Crear título: <titu>/Tu título/",
-            "Crear párrafo: <text>/Tu texto/",
-            "Botón absoluto: <boto>/x/y/Texto/",
-            "Imagen: <foto>/url_de_la_imagen/",
-            "Link: <link>/url/Texto/",
-            "Negrita: <bold>/Texto/",
-            "Cursiva: <ita>/Texto/",
-            "Lista: <list>/item1,item2,item3/",
-            "Input de texto: <in>/Texto Placeholder/",
-            "Salto de línea: <br>",
-            "Línea divisoria: <hr>",
-            "Color de fondo: <fondo>/#color/",
-            "Color de texto general: <color_texto>/#color/",
-            "Texto centrado: <centrar>/Texto/",
-            "Subrayado: <sub>/Texto/",
-            "Tachado: <tach>/Texto/",
-            "Icono/Emoji grande: <icono>/emoji/",
-            "Video embebido: <video>/url_video/",
-            "Audio: <audio>/url_audio/",
-            "Tabla simple: <tabla>/Col1,Col2|Data1,Data2/",
-            "Caja con sombra: <sombra>/Texto/",
-            "Barra de progreso: <progreso>/valor_1_al_100/",
-            "Alerta en pantalla (solo visual): <alerta>/Mensaje/",
-            "Marquesina animada: <marquee>/Texto/",
-            "Texto parpadeante: <blink>/Texto/",
-            "Superíndice: <sup>/Texto/",
-            "Subíndice: <sub>/Texto/",
-            "Cita en bloque: <cita>/Texto/",
-            "Código monospaciado: <codigo>/Texto/",
-            "Ocultar elemento: <ocultar>/Texto/",
-            "Mostrar fecha actual: <fecha>",
-            "Mostrar hora actual: <hora>",
-            "Separador vertical: <vhr>",
-            "Botón de alerta: <botonalerta>/Texto/",
-            "Checkbox: <check>/Etiqueta/",
-            "Radio button: <radio>/Etiqueta/",
-            "Selector: <select>/opc1,opc2/",
-            "Deslizador (Range): <range>/0/100/",
-            "Texto con arcoiris: <arcoiris>/Texto/",
-            "Girar elemento 90deg: <girar90>/Texto/",
-            "Fuente gigante: <gigante>/Texto/",
-            "Fuente enana: <enano>/Texto/",
-            "Caja con borde: <borde>/Texto/",
-            "Elemento transparente: <trans>/Texto/"
-        ];
+        // ANTI-DEVTOOLS SYSTEM
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || 
+               (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) || 
+               (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                document.getElementById('security-overlay').style.display = 'flex';
+                setTimeout(() => document.getElementById('security-overlay').style.display = 'none', 2000);
+            }
+        });
 
-        document.getElementById('rules-list').innerHTML = fiftyRules.map(r => `<li>${r}</li>`).join('');
-
-        // Animación de Loading Screen
-        document.addEventListener("DOMContentLoaded", () => {
+        // ANIMACIÓN MATRIX DE CARGA
+        document.addEventListener('DOMContentLoaded', () => {
             const word = "Makebyr";
-            const logoContainer = document.getElementById('makebyr-logo');
-            
-            word.split('').forEach((char, index) => {
+            const container = document.getElementById('logo-container');
+            word.split('').forEach((char, i) => {
                 const span = document.createElement('span');
                 span.innerText = char;
-                span.className = 'letter';
-                span.style.animationDelay = `${index * 0.15}s`;
-                logoContainer.appendChild(span);
+                span.className = 'matrix-letter';
+                span.style.animationDelay = `${i * 0.15}s`;
+                container.appendChild(span);
             });
 
             setTimeout(() => {
                 const screen = document.getElementById('loading-screen');
                 screen.style.opacity = '0';
-                screen.style.transform = 'scale(1.1)';
                 setTimeout(() => {
-                    screen.style.display = 'none';
-                    initApp(); 
+                    screen.style.visibility = 'hidden';
+                    initIDE();
                 }, 500);
             }, 3000);
         });
 
-        // === ESTADO Y PERSISTENCIA (LocalStorage) ===
+        // VARIABLES GLOBALES
         let projects = [];
-        let currentProjectId = null;
-        const editor = document.getElementById('code-editor');
-        const highlight = document.getElementById('code-highlight');
+        let activeProjectId = null;
         let lastCompiledHTML = "";
         let saveTimeout;
 
-        // Plantilla estricta ccfest
-        const defaultTemplate = `<e cc>\n<c>\n<titu>/Bienvenido a ccfest 2.0/\n<v>\n<text>/Este bloque está dentro de una clase v/\n<bold>/Añade más cosas aquí/\n<v>;\n\n<boto>/50px/200px/Botón Flotante/\n\n<c>;\n<f>;`;
+        const defaultCode = `<e cc>
+<c>
+(( Configuración global de fondo
+<fon>/blanc/
 
-        function initApp() {
-            const saved = localStorage.getItem('makebyr_ccfest_projects');
-            if (saved) {
-                projects = JSON.parse(saved);
-            }
+(( Uso de la nueva sintaxis inline con 1000 reglas: <etiqueta>/texto/prop/val/prop/val/...
+<titu>/Makebyr IDE Ultimate/color/azu/p/center/
+<subtitu>/Motor ccfest Inline V4/color/negr/p/center/size/18px/
 
-            if (projects.length === 0) {
-                createNewProject("Mi Primer Proyecto");
-            } else {
-                const lastProject = localStorage.getItem('makebyr_ccfest_last_active');
-                if (lastProject && projects.find(p => p.id === lastProject)) {
-                    loadProject(lastProject);
-                } else {
-                    loadProject(projects[0].id);
-                }
-            }
-            renderProjectList();
+(( Abriendo una clase de OOP
+<v>
+<herencia>/SistemaBase/
+<text>/Este texto esta dentro de un div con padding./color/red/size/16px/class/mi-texto/
+<boto>/Haz Click/color/blanc/bg/negr/radius/8px/p/center/w/200px/
+<v>;
+
+#mi Esto es un comentario de una linea
+<c>;
+<f>;`;
+
+        function initIDE() {
+            const saved = localStorage.getItem('makebyr_ultimate_v1');
+            if (saved) projects = JSON.parse(saved);
+
+            if (projects.length === 0) createProject("main");
+            else loadProject(projects[0].id);
+            
+            logConsole("Makebyr Engine v4 inicializado.", "text-cyan-400");
+            logConsole("Módulo Anti-F12 activo.", "text-green-500");
         }
 
-        function createNewProject(name = null) {
-            if(!name) {
-                name = prompt("Nombre del nuevo proyecto:");
-                if(!name) return;
+        function createProject(name = null) {
+            if (!name) {
+                name = prompt("Nombre del proyecto (.ccfest):");
+                if (!name) return;
             }
-            const newProj = {
-                id: 'proj_' + Date.now(),
-                name: name,
-                code: defaultTemplate,
-                lastModified: Date.now()
-            };
-            projects.push(newProj);
-            saveProjectsToStorage();
-            loadProject(newProj.id);
-            renderProjectList();
-            logConsole(`Proyecto '${name}' creado.`, "info");
+            const proj = { id: 'p_' + Date.now(), name: name, code: defaultCode };
+            projects.push(proj);
+            saveData();
+            loadProject(proj.id);
         }
 
         function loadProject(id) {
-            const proj = projects.find(p => p.id === id);
-            if (!proj) return;
-            currentProjectId = id;
-            editor.value = proj.code;
-            document.getElementById('current-file-name').innerText = `📄 ${proj.name}.ccfest`;
-            localStorage.setItem('makebyr_ccfest_last_active', id);
-            updateEditor();
-            renderProjectList();
+            activeProjectId = id;
+            const p = projects.find(x => x.id === id);
+            document.getElementById('code-editor').value = p.code;
+            document.getElementById('current-filename').innerText = `📄 ${p.name}.ccfest`;
             
-            // Limpiar iframe al cambiar proyecto
+            // Reset preview
             document.getElementById('preview-frame').classList.add('hidden');
-            document.getElementById('preview-placeholder').classList.remove('hidden');
-            document.getElementById('btn-convert').classList.add('hidden');
+            document.getElementById('preview-empty').classList.remove('hidden');
+            document.getElementById('btn-export-html').classList.add('hidden');
+            document.getElementById('render-time').innerText = "";
+            
+            renderProjectsList();
+            handleInput(); 
         }
 
-        function deleteProject(id, event) {
-            event.stopPropagation();
-            if(projects.length <= 1) {
-                alert("No puedes borrar el único proyecto.");
-                return;
-            }
-            if(confirm("¿Seguro que deseas eliminar este proyecto?")) {
-                projects = projects.filter(p => p.id !== id);
-                if(currentProjectId === id) {
-                    loadProject(projects[0].id);
-                } else {
-                    renderProjectList();
-                }
-                saveProjectsToStorage();
-            }
+        function deleteProject(id, e) {
+            e.stopPropagation();
+            if(projects.length <= 1) return alert("Debe quedar 1 proyecto mínimo.");
+            projects = projects.filter(x => x.id !== id);
+            saveData();
+            if(activeProjectId === id) loadProject(projects[0].id);
+            else renderProjectsList();
         }
 
-        function renderProjectList() {
-            const list = document.getElementById('project-list');
+        function renderProjectsList() {
+            const list = document.getElementById('projects-list');
             list.innerHTML = "";
             projects.forEach(p => {
-                const isActive = p.id === currentProjectId;
-                const div = document.createElement('div');
-                div.className = `flex justify-between items-center p-2 rounded cursor-pointer ${isActive ? 'bg-[var(--neon-blue)] text-black' : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] text-gray-300'}`;
-                div.onclick = () => loadProject(p.id);
-                div.innerHTML = `
-                    <span class="truncate pr-2">${p.name}</span>
-                    <button class="text-red-500 hover:text-red-700 font-bold px-1" onclick="deleteProject('${p.id}', event)">x</button>
-                `;
-                list.appendChild(div);
+                const active = p.id === activeProjectId;
+                list.innerHTML += `
+                    <div class="flex justify-between items-center p-2 rounded cursor-pointer text-sm border-l-2 ${active ? 'bg-cyan-900/20 border-cyan-400 text-white font-bold' : 'bg-[#1a1a1a] border-transparent text-gray-400 hover:bg-[#222]'}" onclick="loadProject('${p.id}')">
+                        <span class="truncate">📦 ${p.name}</span>
+                        <button onclick="deleteProject('${p.id}', event)" class="text-red-500 hover:text-red-300 font-bold px-2">×</button>
+                    </div>`;
             });
         }
 
-        function saveProjectsToStorage() {
-            localStorage.setItem('makebyr_ccfest_projects', JSON.stringify(projects));
+        function saveData() { localStorage.setItem('makebyr_ultimate_v1', JSON.stringify(projects)); }
+
+        function switchTab(tab) {
+            document.getElementById('tab-proj').classList.toggle('active', tab==='proj');
+            document.getElementById('tab-doc').classList.toggle('active', tab==='doc');
+            document.getElementById('panel-proj').classList.toggle('hidden', tab!=='proj');
+            document.getElementById('panel-doc').classList.toggle('hidden', tab!=='doc');
+            document.getElementById('panel-proj').classList.toggle('flex', tab==='proj');
+            document.getElementById('panel-doc').classList.toggle('flex', tab==='doc');
         }
 
-        function handleCodeInput() {
-            updateEditor();
-            
-            // Auto guardado con debouncing
+        const editor = document.getElementById('code-editor');
+        const highlight = document.getElementById('code-highlight');
+
+        function handleInput() {
+            updateSyntax();
             clearTimeout(saveTimeout);
             const status = document.getElementById('save-status');
             status.innerText = "Guardando...";
-            status.className = "text-yellow-500 text-xs mr-4";
-            status.classList.remove('hidden');
-
             saveTimeout = setTimeout(() => {
-                const proj = projects.find(p => p.id === currentProjectId);
-                if (proj) {
-                    proj.code = editor.value;
-                    proj.lastModified = Date.now();
-                    saveProjectsToStorage();
-                    status.innerText = "✓ Guardado";
-                    status.className = "text-green-500 text-xs mr-4";
-                    setTimeout(() => status.classList.add('hidden'), 2000);
-                }
-            }, 800);
+                const p = projects.find(x => x.id === activeProjectId);
+                if (p) p.code = editor.value;
+                saveData();
+                status.innerText = "Guardado ✓";
+                setTimeout(() => status.innerText = "", 2000);
+            }, 500);
         }
 
-        function switchSidebarTab(tab) {
-            const tProj = document.getElementById('tab-projects');
-            const tDocs = document.getElementById('tab-docs');
-            const pProj = document.getElementById('panel-projects');
-            const pDocs = document.getElementById('panel-docs');
-            
-            if(tab === 'projects') {
-                tProj.classList.add('sidebar-tab-active', 'text-[var(--neon-blue)]');
-                tProj.classList.remove('text-gray-500');
-                tDocs.classList.remove('sidebar-tab-active', 'text-[var(--neon-blue)]');
-                tDocs.classList.add('text-gray-500');
-                pProj.classList.remove('hidden');
-                pProj.classList.add('flex');
-                pDocs.classList.add('hidden');
-            } else {
-                tDocs.classList.add('sidebar-tab-active', 'text-[var(--neon-blue)]');
-                tDocs.classList.remove('text-gray-500');
-                tProj.classList.remove('sidebar-tab-active', 'text-[var(--neon-blue)]');
-                tProj.classList.add('text-gray-500');
-                pDocs.classList.remove('hidden');
-                pProj.classList.add('hidden');
-                pProj.classList.remove('flex');
-            }
-        }
-
-        function updateEditor() {
+        function updateSyntax() {
             const code = editor.value;
-            const linesCount = code.split('\n').length;
-            document.getElementById('line-numbers').innerHTML = Array(linesCount).fill(0).map((_, i) => i + 1).join('<br>');
+            const lines = code.split('\n');
+            document.getElementById('line-numbers').innerHTML = lines.map((_, i) => i + 1).join('<br>');
             
-            let highlighted = escapeHTML(code);
-            
-            // Resaltado de reglas estrictas
-            highlighted = highlighted.replace(/&lt;e cc&gt;/g, '<span class="hl-struct">&lt;e cc&gt;</span>');
-            highlighted = highlighted.replace(/&lt;c&gt;;/g, '<span class="hl-struct">&lt;c&gt;;</span>');
-            highlighted = highlighted.replace(/&lt;c&gt;/g, '<span class="hl-struct">&lt;c&gt;</span>');
-            highlighted = highlighted.replace(/&lt;f&gt;;/g, '<span class="hl-struct">&lt;f&gt;;</span>');
-            
-            // Resaltado de clases / contenedores
-            highlighted = highlighted.replace(/&lt;v&gt;;/g, '<span class="hl-container">&lt;v&gt;;</span>');
-            highlighted = highlighted.replace(/&lt;v&gt;/g, '<span class="hl-container">&lt;v&gt;</span>');
+            let htmlCode = "";
+            lines.forEach(line => {
+                let esc = escapeHTML(line);
+                
+                // Comentarios
+                if (esc.includes('((') || esc.includes('#mi')) {
+                    const idx1 = esc.indexOf('((');
+                    const idx2 = esc.indexOf('#mi');
+                    let commentIdx = -1;
+                    if (idx1 !== -1 && idx2 !== -1) commentIdx = Math.min(idx1, idx2);
+                    else if (idx1 !== -1) commentIdx = idx1;
+                    else if (idx2 !== -1) commentIdx = idx2;
 
-            // Etiquetas con barras
-            highlighted = highlighted.replace(/(&lt;[a-zA-Z0-9_-]+&gt;)(\/)(.*?)(\/)/g, function(match, p1, p2, p3, p4) {
-                return `<span class="hl-tag">${p1}</span><span class="hl-slash">${p2}</span><span class="hl-content">${p3}</span><span class="hl-slash">${p4}</span>`;
+                    if(commentIdx !== -1) {
+                        const before = esc.substring(0, commentIdx);
+                        const comment = esc.substring(commentIdx);
+                        esc = processSyntaxLine(before) + `<span class="hl-comment">${comment}</span>`;
+                    }
+                } else {
+                    esc = processSyntaxLine(esc);
+                }
+                htmlCode += esc + "\n";
             });
-            // Etiquetas con múltiple barras (ej. <boto>/x/y/texto/)
-            highlighted = highlighted.replace(/(&lt;[a-zA-Z0-9_-]+&gt;)(\/)(.*?)(\/)(.*?)(\/)(.*?)(\/)/g, function(match, p1, p2, p3, p4, p5, p6, p7, p8) {
-                return `<span class="hl-tag">${p1}</span><span class="hl-slash">${p2}</span><span class="hl-content">${p3}</span><span class="hl-slash">${p4}</span><span class="hl-content">${p5}</span><span class="hl-slash">${p6}</span><span class="hl-content">${p7}</span><span class="hl-slash">${p8}</span>`;
-            });
-            
-            // Etiquetas simples
-            highlighted = highlighted.replace(/(&lt;[a-zA-Z0-9_-]+&gt;)(?!<span)/g, '<span class="hl-tag">$1</span>');
 
-            if(code[code.length-1] === "\n") highlighted += " ";
-            
-            highlight.innerHTML = highlighted;
+            highlight.innerHTML = htmlCode;
             updateCursor();
         }
 
-        function escapeHTML(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+        function processSyntaxLine(esc) {
+            // Estructuras
+            if (esc.trim() === '&lt;e cc&gt;' || esc.trim() === '&lt;c&gt;' || esc.trim() === '&lt;c&gt;;' || esc.trim() === '&lt;f&gt;;') {
+                return `<span class="hl-struct">${esc}</span>`;
+            }
+            if (esc.trim() === '&lt;v&gt;' || esc.trim() === '&lt;v&gt;;') {
+                return `<span class="hl-struct text-purple-400">${esc}</span>`;
+            }
+
+            // Inline syntax: <tag>/content/prop/val/...
+            return esc.replace(/(&lt;[a-zA-Z0-9_-]+&gt;)(\/)(.*?)(\/)(.*)/g, (match, p1, p2, p3, p4, p5) => {
+                let rest = p5.split('/').map((part, i, arr) => {
+                    if (part === '') return '';
+                    return i % 2 === 0 ? `<span class="hl-prop">${part}</span>` : `<span class="hl-val">${part}</span>`;
+                }).join('<span class="hl-slash">/</span>');
+                
+                return `<span class="hl-tag">${p1}</span><span class="hl-slash">${p2}</span><span class="text-white">${p3}</span><span class="hl-slash">${p4}</span>${rest}`;
+            });
+        }
 
         function syncScroll() {
             highlight.scrollTop = editor.scrollTop;
@@ -557,195 +467,294 @@
         function updateCursor() {
             const textToCursor = editor.value.substring(0, editor.selectionStart);
             const lines = textToCursor.split("\n");
-            const currentLine = lines.length;
-            const currentCol = lines[lines.length - 1].length + 1;
-            document.getElementById('cursor-pos').innerText = `Ln ${currentLine}, Col ${currentCol}`;
+            document.getElementById('cursor-pos').innerText = `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
         }
 
+        function escapeHTML(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
         editor.addEventListener('keydown', function(e) {
-            if (e.key == 'Tab') {
+            if (e.key === 'Tab') {
                 e.preventDefault();
-                const start = this.selectionStart;
-                const end = this.selectionEnd;
-                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-                this.selectionStart = this.selectionEnd = start + 4;
-                handleCodeInput();
+                const s = this.selectionStart, e_pos = this.selectionEnd;
+                this.value = this.value.substring(0, s) + "    " + this.value.substring(e_pos);
+                this.selectionStart = this.selectionEnd = s + 4;
+                handleInput();
             }
         });
 
-        function logConsole(msg, type = "normal") {
-            const consoleOut = document.getElementById('console-output');
-            const now = new Date().toLocaleTimeString();
-            let color = "#e6e6e6"; 
-            if (type === "error") color = "#ff4a4a";
-            if (type === "success") color = "#00ff41";
-            if (type === "info") color = "#00f0ff";
-            
-            consoleOut.innerHTML += `\n<span style="color: #666">[${now}]</span> <span style="color: ${color}">${msg}</span>`;
-            consoleOut.scrollTop = consoleOut.scrollHeight;
+        function logConsole(msg, colorClass = "text-gray-300") {
+            const out = document.getElementById('console-output');
+            const time = new Date().toLocaleTimeString();
+            out.innerHTML += `<div class="mb-1 border-b border-[#222] pb-1"><span class="text-gray-600">[${time}]</span> <span class="${colorClass}">${msg}</span></div>`;
+            out.scrollTop = out.scrollHeight;
         }
+        function clearConsole() { document.getElementById('console-output').innerHTML = ''; }
 
-        function validateAndParseCCFest(code) {
-            const linesRaw = code.split('\n');
-            const lines = linesRaw.map(l => l.trim()).filter(l => l.length > 0);
+        const colorMap = {
+            'blanc': 'white', 'blanco': 'white', 'negr': 'black', 'negro': 'black',
+            'azu': '#0ea5e9', 'azul': '#0ea5e9', 'red': '#ef4444', 'rojo': '#ef4444',
+            'verd': '#10b981', 'verde': '#10b981', 'amar': '#eab308', 'amarillo': '#eab308',
+            'gris': '#6b7280', 'mora': '#8b5cf6', 'transparente': 'transparent'
+        };
+
+        const cssPropMap = {
+            'color': 'color', 'bg': 'background-color', 'fondo': 'background-color',
+            'size': 'font-size', 'tamano': 'font-size', 'w': 'width', 'width': 'width',
+            'h': 'height', 'height': 'height', 'radius': 'border-radius', 
+            'borde': 'border', 'm': 'margin', 'p': 'padding', 'align': 'text-align'
+        };
+
+        const tagMap = {
+            'titu': 'h1', 'subtitu': 'h2', 'text': 'p', 'boto': 'button',
+            'foto': 'img', 'link': 'a', 'in': 'input', 'lista': 'ul',
+            'item': 'li', 'div': 'div', 'span': 'span', 'canvas': 'canvas'
+        };
+
+        function compileCCFest(code) {
+            let t0 = performance.now();
+            let rawLines = code.split('\n');
+            let lines = [];
             
-            if(lines.length < 4) {
-                throw new Error("ERROR CRÍTICO: El código es muy corto. Necesita mínimo 4 líneas estructurales (<e cc>, <c>, <c>;, <f>;).");
+            // 1. Quitar comentarios y lineas vacias
+            for(let i=0; i<rawLines.length; i++) {
+                let l = rawLines[i];
+                if(l.includes('((')) l = l.split('((')[0];
+                if(l.includes('#mi')) l = l.split('#mi')[0];
+                l = l.trim();
+                if(l !== '') lines.push({ text: l, originalLine: i + 1 });
             }
 
-            // Validación ESTRICTA
-            if(lines[0] !== "<e cc>") throw new Error("Línea 1 ERROR: El código DEBE empezar obligatoriamente con la etiqueta <e cc>.");
-            if(lines[1] !== "<c>") throw new Error("Línea 2 ERROR: Falta la etiqueta obligatoria <c> para abrir el bloque.");
-            
-            const lastLine = lines[lines.length - 1];
-            const secondToLast = lines[lines.length - 2];
+            // 2. Validación Estricta
+            if (lines.length < 4) throw new Error("CRÍTICO: Código insuficiente. Se requieren las 4 reglas estructurales.");
+            if (lines[0].text !== '<e cc>') throw new Error(`SINTAXIS Ln ${lines[0].originalLine}: Falta <e cc> en línea 1`);
+            if (lines[1].text !== '<c>') throw new Error(`SINTAXIS Ln ${lines[1].originalLine}: Falta <c> en línea 2`);
+            if (lines[lines.length-1].text !== '<f>;') throw new Error(`SINTAXIS Ln ${lines[lines.length-1].originalLine}: Última línea debe ser <f>;`);
+            if (lines[lines.length-2].text !== '<c>;') throw new Error(`SINTAXIS Ln ${lines[lines.length-2].originalLine}: Penúltima línea debe ser <c>;`);
 
-            if(lastLine !== "<f>;") throw new Error("Última Línea ERROR: El código DEBE terminar obligatoriamente con la etiqueta de terminal <f>;");
-            if(secondToLast !== "<c>;") throw new Error("Penúltima Línea ERROR: Falta la etiqueta <c>; para cerrar el bloque principal antes del terminal.");
+            let globalBg = "white";
+            let bodyHTML = "";
 
-            let htmlBody = '';
-            let styleRules = [];
+            // 3. Procesar Cuerpo
+            for (let i = 2; i < lines.length - 2; i++) {
+                let lineObj = lines[i];
+                let line = lineObj.text;
 
-            // Procesar cuerpo ignorando las estructuras validadas
-            const bodyLines = lines.slice(2, lines.length - 2);
-
-            for(let i=0; i < bodyLines.length; i++) {
-                let line = bodyLines[i];
-                
-                // Contenedores
-                if(line === '<v>') { htmlBody += '<div class="cc-class border border-gray-600 bg-[#ffffff10] rounded p-4 my-2 transition-all relative">\n'; continue; }
-                if(line === '<v>;') { htmlBody += '</div>\n'; continue; }
-
-                // Etiquetas Básicas
-                if(line.match(/^<titu>\/(.*?)\/$/)) { htmlBody += line.replace(/^<titu>\/(.*?)\/$/, '<h1 class="text-4xl font-bold mb-4 drop-shadow-md">$1</h1>\n'); continue; }
-                if(line.match(/^<text>\/(.*?)\/$/)) { htmlBody += line.replace(/^<text>\/(.*?)\/$/, '<p class="mb-2 leading-relaxed">$1</p>\n'); continue; }
-                
-                // Nuevas etiquetas
-                // <boto>/x/y/Texto/
-                let bMatch = line.match(/^<boto>\/(.*?)\/(.*?)\/(.*?)\/$/);
-                if(bMatch) {
-                    htmlBody += `<button class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded shadow-lg absolute" style="left: ${bMatch[1]}; top: ${bMatch[2]};">${bMatch[3]}</button>\n`;
+                // OOP y Bloques
+                if (line === '<v>') { bodyHTML += `<div class="cc-bloque">\n`; continue; }
+                if (line === '<v>;') { bodyHTML += `</div>\n`; continue; }
+                if (line.match(/^<(herencia|poli|encapsular|abstraccion)>\/(.*?)\/$/)) {
+                    let m = line.match(/^<(herencia|poli|encapsular|abstraccion)>\/(.*?)\/$/);
+                    bodyHTML += `<div class="cc-oop" data-oop="${m[1]}">[OOP ${m[1].toUpperCase()}]: ${m[2]}</div>\n`;
                     continue;
                 }
-                
-                if(line.match(/^<foto>\/(.*?)\/$/)) { htmlBody += line.replace(/^<foto>\/(.*?)\/$/, '<img src="$1" alt="Imagen" class="max-w-full rounded shadow-lg my-2">\n'); continue; }
-                if(line.match(/^<link>\/(.*?)\/(.*?)\/$/)) { htmlBody += line.replace(/^<link>\/(.*?)\/(.*?)\/$/, '<a href="$1" target="_blank" class="text-blue-400 hover:text-blue-300 underline">$2</a>\n'); continue; }
-                if(line.match(/^<bold>\/(.*?)\/$/)) { htmlBody += line.replace(/^<bold>\/(.*?)\/$/, '<strong>$1</strong><br>\n'); continue; }
-                if(line.match(/^<ita>\/(.*?)\/$/)) { htmlBody += line.replace(/^<ita>\/(.*?)\/$/, '<em>$1</em><br>\n'); continue; }
-                
-                let listMatch = line.match(/^<list>\/(.*?)\/$/);
-                if(listMatch) {
-                    let items = listMatch[1].split(',').map(item => `<li class="ml-4 list-disc">${item.trim()}</li>`).join('\n');
-                    htmlBody += `<ul class="my-2">\n${items}\n</ul>\n`; continue;
+
+                // Globales
+                let globalMatch;
+                if (globalMatch = line.match(/^<fon>\/(.*?)\/$/)) {
+                    globalBg = colorMap[globalMatch[1].toLowerCase()] || globalMatch[1];
+                    continue;
                 }
+
+                // Parseo Inline Universal <tag>/content/prop1/val1/...
+                let regex = /^<([a-zA-Z0-9_-]+)>\/(.*?)\/(.*)$/;
+                let match = line.match(regex);
                 
-                if(line.match(/^<in>\/(.*?)\/$/)) { htmlBody += line.replace(/^<in>\/(.*?)\/$/, '<input type="text" placeholder="$1" class="border p-2 rounded bg-gray-800 text-white w-full my-2 focus:ring focus:ring-blue-500">\n'); continue; }
-                if(line === '<br>') { htmlBody += '<br>\n'; continue; }
-                if(line === '<hr>') { htmlBody += '<hr class="border-gray-600 my-4">\n'; continue; }
+                if (match) {
+                    let tag = match[1];
+                    let content = match[2];
+                    let propsStr = match[3];
+                    
+                    let attrs = {};
+                    let styles = {};
+                    let classes = "";
+                    let posAlign = ""; // Para flexbox en el contenedor si piden p/center
 
-                // Otras utilidades (simulando que cubrimos las 50)
-                if (line.match(/^<fondo>\/(.*?)\/$/)) { styleRules.push(`background-color: ${line.match(/^<fondo>\/(.*?)\/$/)[1]}`); continue; }
-                if (line.match(/^<color_texto>\/(.*?)\/$/)) { styleRules.push(`color: ${line.match(/^<color_texto>\/(.*?)\/$/)[1]}`); continue; }
+                    // Parsear Propiedades
+                    if (propsStr) {
+                        let parts = propsStr.split('/');
+                        for (let p = 0; p < parts.length - 1; p += 2) {
+                            let key = parts[p].toLowerCase();
+                            let val = parts[p+1];
+                            if(!key) continue;
 
-                // Si no coincide, renderizar como texto puro
-                if(line.startsWith('<') && line.endsWith('>')) {
-                    // Etiqueta desconocida, ignorar o mostrar error leve
+                            // Color Translation
+                            if(colorMap[val.toLowerCase()]) val = colorMap[val.toLowerCase()];
+
+                            if (key === 'class' || key === 'clase') {
+                                classes += val + " ";
+                            } else if (key === 'p' || key === 'posicion') {
+                                posAlign = val;
+                                styles['text-align'] = val;
+                            } else if (key === 'src' || key === 'href' || key === 'type') {
+                                attrs[key] = val;
+                            } else if (cssPropMap[key]) {
+                                styles[cssPropMap[key]] = val;
+                            } else {
+                                // Regla genérica: inyecta directo a CSS si no está mapeado
+                                styles[key] = val; 
+                            }
+                        }
+                    }
+
+                    // Traducir Tag
+                    let htmlTag = tagMap[tag] || tag;
+                    
+                    // Comportamientos especiales por Tag
+                    if (tag === 'foto' || tag === 'img') { htmlTag = 'img'; attrs['src'] = content; content = ""; }
+                    if (tag === 'link') { htmlTag = 'a'; if(!attrs['href']) attrs['href'] = '#'; }
+                    if (tag === 'in') { htmlTag = 'input'; attrs['placeholder'] = content; content = ""; }
+
+                    // Construir Atributos y Estilos
+                    let attrStr = Object.entries(attrs).map(([k,v]) => `${k}="${v}"`).join(' ');
+                    let styleStr = Object.entries(styles).map(([k,v]) => `${k}:${v};`).join('');
+                    
+                    // Ensamblar
+                    let elementHTML = `<${htmlTag} class="cc-elemento ${classes}" style="${styleStr}" ${attrStr}>${content}</${htmlTag === 'img' || htmlTag === 'input' ? ' ' : htmlTag + '>'}\n`;
+                    
+                    // Alineación especial para botones y divs (empaquetado flex) si se solicita posicion
+                    if ((tag === 'boto' || tag === 'foto') && posAlign) {
+                        let jc = posAlign === 'center' ? 'center' : (posAlign === 'right' || posAlign === 'der' ? 'flex-end' : 'flex-start');
+                        elementHTML = `<div style="display:flex; justify-content:${jc}; width:100%;">${elementHTML}</div>\n`;
+                    }
+
+                    bodyHTML += elementHTML;
+
+                } else if (line.match(/^<([a-zA-Z0-9_-]+)>$/)) {
+                    // Etiquetas simples sin propiedades (ej <br>, <hr>)
+                    bodyHTML += `${line}\n`;
                 } else {
-                    htmlBody += `<span>${line}</span><br>\n`;
+                    // Texto libre
+                    bodyHTML += `<span>${line}</span><br>\n`;
                 }
             }
 
-            const bodyStyleString = styleRules.length > 0 ? styleRules.join('; ') : 'background-color: #1e1e1e; color: #ffffff;';
+            let t1 = performance.now();
+            let time = (t1 - t0).toFixed(2);
 
-            return `<!DOCTYPE html>
+            // 4. Plantilla Final HTML
+            return {
+                html: `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ccfest Generado</title>
-    <script src="https://cdn.tailwindcss.com"><\/script>
+    <title>Compilado ccfest</title>
     <style>
-        body { ${bodyStyleString}; padding: 20px; min-height: 100vh; position: relative; font-family: sans-serif; }
+        * { box-sizing: border-box; }
+        body { 
+            background-color: ${globalBg}; 
+            margin: 0; padding: 20px; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            transition: background 0.3s;
+        }
+        
+        /* Estilos Base Mapeados */
+        h1, h2, p { margin-top: 0; margin-bottom: 10px; }
+        h1 { font-size: 2.5em; font-weight: 800; }
+        h2 { font-size: 1.8em; }
+        
+        button {
+            border: none; padding: 10px 20px; font-weight: bold; cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s; font-family: inherit;
+        }
+        button:active { transform: scale(0.95); }
+        button:hover { opacity: 0.9; }
+
+        input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+        input:focus { border-color: #0ea5e9; }
+        
+        img { max-width: 100%; height: auto; }
+        
+        /* Contenedores OOP y Bloques */
+        .cc-bloque {
+            padding: 15px; margin: 10px 0; border-radius: 8px;
+            background: rgba(128,128,128,0.1); border: 1px solid rgba(128,128,128,0.2);
+        }
+        .cc-oop {
+            font-family: monospace; font-size: 12px; background: #1e1e1e; color: #4ade80;
+            padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
-${htmlBody}
+${bodyHTML}
 </body>
-</html>`;
+</html>`,
+                time: time
+            };
         }
 
-        function runProject() {
-            const code = editor.value;
-            const iframe = document.getElementById('preview-frame');
-            const placeholder = document.getElementById('preview-placeholder');
-            const convertBtn = document.getElementById('btn-convert');
+        function runCode() {
+            logConsole("Compilando código...", "text-blue-400");
             
-            document.getElementById('console-output').innerHTML += '\n<hr style="border-color:#333; margin: 10px 0;">';
-            logConsole("Analizando sintaxis y estructura estricta ccfest...", "info");
+            const iframe = document.getElementById('preview-frame');
+            const placeholder = document.getElementById('preview-empty');
+            const btnHTML = document.getElementById('btn-export-html');
+            const timeLabel = document.getElementById('render-time');
 
             try {
-                lastCompiledHTML = validateAndParseCCFest(code);
-                
-                logConsole("COMPILACIÓN EXITOSA. Estructura válida.", "success");
+                const result = compileCCFest(editor.value);
+                lastCompiledHTML = result.html;
                 
                 iframe.srcdoc = lastCompiledHTML;
                 iframe.classList.remove('hidden');
                 placeholder.classList.add('hidden');
-                convertBtn.classList.remove('hidden');
+                btnHTML.classList.remove('hidden');
+                timeLabel.innerText = `Renderizado en ${result.time}ms`;
                 
-            } catch (error) {
-                logConsole(error.message, "error");
+                logConsole(`ÉXITO: Renderizado en ${result.time}ms.`, "text-green-400 font-bold");
+                
+            } catch (err) {
+                logConsole(err.message, "text-red-500 font-bold bg-red-900/20 px-2 py-1");
                 iframe.classList.add('hidden');
                 placeholder.classList.remove('hidden');
-                placeholder.innerHTML = `<span class="text-[var(--neon-pink)] font-bold bg-black p-4 rounded border border-[var(--neon-pink)]">X FALLO ESTRUCTURAL X<br><br>${error.message}</span>`;
-                convertBtn.classList.add('hidden');
+                placeholder.innerHTML = `<span class="text-red-500 text-center px-4 font-bold border border-red-500 p-4 rounded bg-red-900 bg-opacity-20 max-w-full overflow-hidden text-ellipsis">${err.message}</span>`;
+                btnHTML.classList.add('hidden');
+                timeLabel.innerText = "";
             }
         }
 
-        function compileProject() {
-            if (!editor.value.trim()) return;
-            const proj = projects.find(p => p.id === currentProjectId);
-            const name = proj ? proj.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'codigo';
-            downloadFile(editor.value, `${name}.ccfest`, 'text/plain');
-            logConsole(`Código compilado a formato nativo: ${name}.ccfest`, "success");
-        }
-
-        function convertToHTML() {
-            if (!lastCompiledHTML) return;
-            const proj = projects.find(p => p.id === currentProjectId);
-            const name = proj ? proj.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'web';
-            downloadFile(lastCompiledHTML, `${name}.html`, 'text/html');
-            logConsole(`Sitio web convertido y descargado: ${name}.html`, "success");
-        }
-
-        function uploadProject(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (!file.name.endsWith('.ccfest')) {
-                logConsole("Error: Solo se admiten archivos nativos .ccfest", "error");
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const projName = file.name.replace('.ccfest', '');
-                createNewProject(projName);
-                editor.value = e.target.result;
-                handleCodeInput(); // Auto guarda
-                logConsole(`Archivo subido correctamente.`, "info");
-                runProject();
-            };
-            reader.readAsText(file);
-            event.target.value = ""; 
-        }
-
-        function downloadFile(content, fileName, mimeType) {
-            const blob = new Blob([content], { type: mimeType });
+        function downloadFile(content, fileName, type) {
+            const blob = new Blob([content], { type });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = fileName;
             a.click();
             URL.revokeObjectURL(a.href);
         }
+
+        function downloadCCFest() {
+            if(!editor.value.trim()) return;
+            const p = projects.find(x => x.id === activeProjectId);
+            downloadFile(editor.value, `${p.name}.ccfest`, 'text/plain');
+            logConsole(`Archivo guardado: ${p.name}.ccfest`, "text-purple-400");
+        }
+
+        function downloadHTML() {
+            if(!lastCompiledHTML) return;
+            const p = projects.find(x => x.id === activeProjectId);
+            downloadFile(lastCompiledHTML, `${p.name}.html`, 'text/html');
+            logConsole(`HTML Exportado: ${p.name}.html`, "text-purple-400");
+        }
+
+        function uploadProject(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            if(!file.name.endsWith('.ccfest')) return alert("El archivo debe ser extensión .ccfest");
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const name = file.name.replace('.ccfest', '');
+                createProject(name);
+                editor.value = evt.target.result;
+                handleInput();
+                logConsole(`Archivo cargado correctamente: ${file.name}`, "text-cyan-400");
+                runCode();
+            };
+            reader.readAsText(file);
+            e.target.value = ""; 
+        }
+
     </script>
 </body>
 </html>
